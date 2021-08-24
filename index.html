@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="76x76" href="../../assets/images/apple-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="https://www.eglo.com.co/wp-content/themes/teknolucion/assets/img/icon/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://www.eglo.com.co/wp-content/themes/teknolucion/assets/img/icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://www.eglo.com.co/wp-content/themes/teknolucion/assets/img/icon/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://www.eglo.com.co/wp-content/themes/teknolucion/assets/img/icon/favicon-16x16.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Eglo BI</title>
+    <link href="https://fonts.googleapis.com/css?family=Karla:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.materialdesignicons.com/4.8.95/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/login.css">
+  </head>
+  <body>
+    <main class="d-flex align-items-center min-vh-100 py-3 py-md-0">
+      <div class="container">
+        <div class="card login-card">
+          <div class="row no-gutters">
+            <div class="col-md-5">
+              <img src="assets/images/login.jpg" alt="login" class="login-card-img">
+            </div>
+            <div class="col-md-7">
+              <div class="card-body">
+                <div class="brand-wrapper">
+                  <img src="https://www.eglo.com.co/wp-content/themes/teknolucion/assets/img/logo.png" alt="logo" height="58px">
+                </div>
+                <p>Bienvenido! Ingresa a tu cuenta</p>
+                <form action="#!">
+                  <div class="form-group">
+                    <label for="usuario" class="sr-only">Nombre de Usuario:</label>
+                    <input type="text" name="usuario" id="usuario" class="form-control" placeholder="Nombre de Usuario">
+                  </div>
+                  <div class="form-group mb-4">
+                    <label for="password" class="sr-only">Contraseña</label>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="***********">
+                  </div>
+                  <input name="login" id="login" class="btn btn-block login-btn mb-4" type="button" value="Ingresa!">
+                </form>
+                <a href="#!" class="forgot-password-link">Olvidaste tu contraseña?</a>
+                <p class="login-card-footer-text">&nbsp;<a href="#!" class="text-reset">&nbsp;</a></p>
+                <nav class="login-card-footer-nav">
+                  <a href="#!">Terms of use</a>
+                  <a href="#!">Privacy policy</a>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  </body>
+</html>
+<script>
+  $(document).ready(function() {
+    $("#login").click(function(){
+      usuario = document.getElementById("usuario").value;
+      password = document.getElementById("password").value;
+      console.log(usuario);
+      console.log(password);
+      formData = new FormData();
+      formData.append("usuario", usuario);
+      formData.append("password", password);
+      $.ajax({
+        url: "html/application/consultas/login.php",
+        method: "POST",
+        data: formData,
+        contentType: false,
+        cache: false,
+        processData: false,
+        beforeSend: function(){
+          $("#login").prop("disabled", true);
+        },
+        success: function(data){
+          
+          resultado = JSON.parse(data);
+          item = resultado["item"];
+          mensaje = resultado["mensaje"];
+
+          if(typeof item === 'undefined'){
+            alert("Usuario y/o contraseña invalidos");
+          }else{
+            elemento = item[0];
+            idLogin = elemento['idLogin'];
+            idUsuario = elemento['idUsuario'];
+            idPerfil = elemento['idPerfil'];
+            estado = elemento['estado'];
+
+            if(estado != 1){
+              alert("Usuario Inactivo");
+            }else{
+              formData_Perfil = new FormData();
+              formData_Perfil.append("idPerfil", idPerfil);
+
+              $.ajax({
+                url: "html/application/consultas/permisos.php",
+                method: "POST",
+                data: formData_Perfil,
+                contentType: false,
+                cache: false,
+                processData: false,
+                success: function(data){
+                  resultado = JSON.parse(data);
+                  item = resultado['item'];
+                  mensaje = resultado['mensaje'];
+
+                  let permisos = [];
+
+                  if(typeof item === 'undefined'){
+                    alert("Ha ocurrido un problema, por favor contactese con el administrador");
+                  }else{
+                    for(i = 0; i<item.length; i++){
+                      elemento = item[i];
+                      idPermiso = elemento['idPermiso'];
+
+                      permisos.push(idPermiso);
+                    }
+
+                    formData_sesion = new FormData();
+
+                    formData_sesion.append("idLogin", idLogin);
+                    formData_sesion.append("idUsuario", idUsuario);
+                    formData_sesion.append("idPerfil", idPerfil);
+                    formData_sesion.append("estado", estado);
+                    formData_sesion.append("permisos", permisos);
+
+                    $.ajax({
+                      url: "html/application/consultas/sesion.php",
+                      method: "POST",
+                      data: formData_sesion,
+                      contentType: false,
+                      cache: false, 
+                      processData: false,
+                      success: function(data){
+                        formData_guardado = new FormData();
+                        formData_guardado.append("idUsuario", idUsuario);
+
+                        $.ajax({
+                          url: "html/application/consultas/guardadoLogin.php",
+                          method: "POST",
+                          data: formData_guardado,
+                          contentType: false,
+                          cache: false,
+                          processData: false,
+                          success: function(data){
+                            window.location=("html/pages/dashboard.html");
+                          }
+                        })
+                      }
+                    })
+                  }
+                }
+              })
+            }
+          }
+        }
+      })
+    });
+  });
+</script>
